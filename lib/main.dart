@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:gamba_game/methods/balance_funcs.dart';
 import 'package:gamba_game/pages/diamonds_game_page.dart';
 import 'package:gamba_game/pages/rocket_game.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// FOR TESTING BUTTON
+// ignore: unused_import
+import 'package:gamba_game/methods/balance_funcs.dart';
 
 void main() {
   runApp(const MyApp());

@@ -40,11 +40,43 @@ class _DiamondGameState extends State<DiamondGame> {
               itemBuilder: buildGridItems,
             ),
           ),
-          Slider(
-            value: _value,
-            onChanged: (newValue) {
-              setState(() => _value = newValue);
-            },
+          //Row holding the text above the slider
+          Row(children: [
+            const SizedBox(width: 20),
+            const Icon(
+              Icons.not_interested_rounded,
+              color: Colors.red,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '${_value.round()}',
+              // Use a monospaced font to prevent layout shifts
+              style: const TextStyle(fontFamily: 'monospace'),
+            ),
+            const Spacer(), // Pushes the two groups apart
+            const Icon(Icons.diamond_rounded, color: Colors.blue),
+            const SizedBox(width: 4),
+            Text(
+              '${(25 - _value).round()}',
+              // Use a monospaced font here too for consistency
+              style: const TextStyle(fontFamily: 'monospace'),
+            ),
+            const SizedBox(width: 20),
+          ]),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              showValueIndicator: ShowValueIndicator.never,
+            ),
+            child: Slider(
+              value: _value,
+              onChanged: (newValue) {
+                setState(() => _value = newValue);
+              },
+              min: 1.0,
+              max: 24.0,
+              divisions: 23,
+              label: '', // Still required, but will be hidden by the theme.
+            ),
           ),
           const SizedBox(height: 200),
         ],
@@ -52,6 +84,7 @@ class _DiamondGameState extends State<DiamondGame> {
     );
   }
 
+//TODO: IMPLEMENT LATE
   Widget buildGridItems(BuildContext context, int index) {
     return GestureDetector(
       onTap: () {
