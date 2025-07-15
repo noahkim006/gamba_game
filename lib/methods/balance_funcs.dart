@@ -1,8 +1,6 @@
 import 'package:gamba_game/assets/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-int _betValue = 100;
-
 Future<void> setBalance(int balance) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setInt('user_balance', balance);

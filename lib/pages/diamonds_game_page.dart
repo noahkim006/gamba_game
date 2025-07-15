@@ -11,8 +11,9 @@ class DiamondGame extends StatefulWidget {
 }
 
 class _DiamondGameState extends State<DiamondGame> {
-  double _multiplier = 1.00;
+  final double _multiplier = 1.00;
   double _value = 1.00;
+  bool _isSliderEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -20,27 +21,59 @@ class _DiamondGameState extends State<DiamondGame> {
       appBar: const CustomAppBar(),
       body: Column(
         children: [
-          const SizedBox(height: 20),
-          _buildGameGrid(),
           const SizedBox(height: 5),
+          _buildMultiplierText(),
+          _buildGameGrid(),
+          // const SizedBox(height: 200),
           _buildMinesAndDiamondsRow(),
           _buildSlider(),
           _buildBetControls(),
           _buildPlaceBetButton(),
-          const SizedBox(height: 50),
+          // const SizedBox(height: 50),
         ],
       ),
     );
   }
 
+  Widget _buildMultiplierText() {
+    return ValueListenableBuilder<double>(
+      valueListenable: betMultiplier,
+      builder: (context, value, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.green.shade400, width: 1.5),
+          ),
+          child: Text(
+            '${value.toStringAsFixed(2)}x',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.green,
+              fontFamily: 'monospace',
+              letterSpacing: 1.1,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // Grid of game tiles
   Widget _buildGameGrid() {
-    return Expanded(
+    return SizedBox(
+      height: 290, // Limit grid height to make tiles smaller
       child: GridView.builder(
+        physics:
+            const NeverScrollableScrollPhysics(), // prevent scrolling inside grid
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
-          mainAxisSpacing: 3,
-          crossAxisSpacing: 3,
+          mainAxisSpacing: 0,
+          crossAxisSpacing: 0,
+          mainAxisExtent: 55,
+          childAspectRatio: 1,
         ),
         itemCount: 25,
         itemBuilder: _buildGridItems,
@@ -76,7 +109,14 @@ class _DiamondGameState extends State<DiamondGame> {
       ),
       child: Slider(
         value: _value,
-        onChanged: (newValue) => setState(() => _value = newValue),
+        onChanged:
+            _isSliderEnabled //if _isSliderEnabled true then work, else dont do anytbing
+                ? (double value) {
+                    setState(() {
+                      _value = value;
+                    });
+                  }
+                : null,
         min: 1.0,
         max: 24.0,
         divisions: 23,
@@ -108,7 +148,9 @@ class _DiamondGameState extends State<DiamondGame> {
             IconButton(
               icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
               iconSize: 32,
-              onPressed: () async => await decreaseBet(),
+              onPressed: () async => {
+                await decreaseBet(),
+              },
             ),
             const SizedBox(width: 16),
             ValueListenableBuilder(
@@ -155,6 +197,10 @@ class _DiamondGameState extends State<DiamondGame> {
           onPressed: () {
             // TODO: Implement bet submission logic
             print("Bet submitted!");
+            setState(() {
+              //implement calculating the multiplier formula when submitted, dont reenable the slider until the game is finsihed OR gmae is cancelled early
+              _isSliderEnabled = !_isSliderEnabled;
+            });
           },
           child: const Text(
             'PLACE BET',
@@ -174,7 +220,14 @@ class _DiamondGameState extends State<DiamondGame> {
   Widget _buildGridItems(BuildContext context, int index) {
     return GestureDetector(
       onTap: () => print('Tapped on item $index'),
-      child: const Icon(Icons.panorama_fish_eye_rounded),
+      child: Container(
+        margin:
+            const EdgeInsets.all(4.0), // Add margin for spacing between tiles
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(8), // Rounded corners
+        ),
+      ),
     );
   }
 }

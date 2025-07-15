@@ -15,8 +15,8 @@ class _RocketGame extends State<RocketGame> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(),
+    return const Scaffold(
+      appBar: CustomAppBar(),
     );
   }
 }
