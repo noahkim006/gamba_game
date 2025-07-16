@@ -11,9 +11,10 @@ class DiamondGame extends StatefulWidget {
 }
 
 class _DiamondGameState extends State<DiamondGame> {
-  final double _multiplier = 1.00;
-  double _value = 1.00;
-  bool _isSliderEnabled = true;
+  bool _gameEnabled = false;
+  double _sliderValue = 1.00;
+  Set<int> _diamondTiles = {};
+  final Set<int> _flippedTiles = {};
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +25,10 @@ class _DiamondGameState extends State<DiamondGame> {
           const SizedBox(height: 5),
           _buildMultiplierText(),
           _buildGameGrid(),
-          // const SizedBox(height: 200),
           _buildMinesAndDiamondsRow(),
           _buildSlider(),
           _buildBetControls(),
           _buildPlaceBetButton(),
-          // const SizedBox(height: 50),
         ],
       ),
     );
@@ -61,27 +60,51 @@ class _DiamondGameState extends State<DiamondGame> {
     );
   }
 
-  // Grid of game tiles
   Widget _buildGameGrid() {
     return SizedBox(
-      height: 290, // Limit grid height to make tiles smaller
+      height: 290,
       child: GridView.builder(
-        physics:
-            const NeverScrollableScrollPhysics(), // prevent scrolling inside grid
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
           mainAxisSpacing: 0,
           crossAxisSpacing: 0,
           mainAxisExtent: 55,
-          childAspectRatio: 1,
         ),
         itemCount: 25,
-        itemBuilder: _buildGridItems,
+        itemBuilder: _buildGameTile,
       ),
     );
   }
 
-  // Mines and Diamonds counter
+  Widget _buildGameTile(BuildContext context, int index) {
+    final flipped = _flippedTiles.contains(index);
+    final isDiamond = _diamondTiles.contains(index);
+
+    return GestureDetector(
+      onTap: _gameEnabled && !flipped
+          ? () => setState(() => _flippedTiles.add(index))
+          : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.all(4.0),
+        decoration: BoxDecoration(
+          color:
+              flipped ? (isDiamond ? Colors.green : Colors.red) : Colors.blue,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: flipped
+              ? Icon(
+                  isDiamond ? Icons.diamond : Icons.close,
+                  color: Colors.white,
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
   Widget _buildMinesAndDiamondsRow() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -89,58 +112,48 @@ class _DiamondGameState extends State<DiamondGame> {
         children: [
           const Icon(Icons.not_interested_rounded, color: Colors.red),
           const SizedBox(width: 4),
-          Text('${_value.round()}',
+          Text('${_sliderValue.round()}',
               style: const TextStyle(fontFamily: 'monospace')),
           const Spacer(),
           const Icon(Icons.diamond_rounded, color: Colors.blue),
           const SizedBox(width: 4),
-          Text('${(25 - _value).round()}',
+          Text('${(25 - _sliderValue).round()}',
               style: const TextStyle(fontFamily: 'monospace')),
         ],
       ),
     );
   }
 
-  // Mines selection slider
   Widget _buildSlider() {
     return SliderTheme(
       data: SliderTheme.of(context).copyWith(
         showValueIndicator: ShowValueIndicator.never,
       ),
       child: Slider(
-        value: _value,
-        onChanged:
-            _isSliderEnabled //if _isSliderEnabled true then work, else dont do anytbing
-                ? (double value) {
-                    setState(() {
-                      _value = value;
-                    });
-                  }
-                : null,
+        value: _sliderValue,
         min: 1.0,
         max: 24.0,
         divisions: 23,
         activeColor: Colors.red,
+        onChanged: _gameEnabled
+            ? null
+            : (double value) {
+                setState(() {
+                  _sliderValue = value;
+                });
+              },
       ),
     );
   }
 
-  // Bet increment/decrement and display
   Widget _buildBetControls() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.5),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.grey.shade200,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -148,9 +161,7 @@ class _DiamondGameState extends State<DiamondGame> {
             IconButton(
               icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
               iconSize: 32,
-              onPressed: () async => {
-                await decreaseBet(),
-              },
+              onPressed: _gameEnabled ? null : () => decreaseBet(),
             ),
             const SizedBox(width: 16),
             ValueListenableBuilder(
@@ -170,7 +181,7 @@ class _DiamondGameState extends State<DiamondGame> {
             IconButton(
               icon: const Icon(Icons.add_circle, color: Colors.green),
               iconSize: 32,
-              onPressed: () async => await increaseBet(),
+              onPressed: _gameEnabled ? null : () => increaseBet(),
             ),
           ],
         ),
@@ -178,7 +189,6 @@ class _DiamondGameState extends State<DiamondGame> {
     );
   }
 
-  // Place Bet button
   Widget _buildPlaceBetButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -186,25 +196,32 @@ class _DiamondGameState extends State<DiamondGame> {
         width: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade600,
+            backgroundColor: _gameEnabled ? Colors.red : Colors.blue.shade600,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
             elevation: 4,
-            shadowColor: Colors.black.withOpacity(0.1),
+            shadowColor: Colors.transparent,
           ),
           onPressed: () {
-            // TODO: Implement bet submission logic
-            print("Bet submitted!");
+            // print(_sliderValue.round());
             setState(() {
-              //implement calculating the multiplier formula when submitted, dont reenable the slider until the game is finsihed OR gmae is cancelled early
-              _isSliderEnabled = !_isSliderEnabled;
+              _gameEnabled = !_gameEnabled;
+
+              //If game started, generate random diamond tiles, else clear memory
+              if (_gameEnabled) {
+                _generateDiamondTiles();
+              } else {
+                _diamondTiles.clear();
+                _flippedTiles.clear();
+              }
             });
+            print(_gameEnabled ? "Bet submitted!" : "Game Ended Early");
           },
-          child: const Text(
-            'PLACE BET',
-            style: TextStyle(
+          child: Text(
+            _gameEnabled ? 'End Game' : 'PLACE BET',
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
@@ -216,18 +233,9 @@ class _DiamondGameState extends State<DiamondGame> {
     );
   }
 
-  // Grid tile builder
-  Widget _buildGridItems(BuildContext context, int index) {
-    return GestureDetector(
-      onTap: () => print('Tapped on item $index'),
-      child: Container(
-        margin:
-            const EdgeInsets.all(4.0), // Add margin for spacing between tiles
-        decoration: BoxDecoration(
-          color: Colors.blue,
-          borderRadius: BorderRadius.circular(8), // Rounded corners
-        ),
-      ),
-    );
+  void _generateDiamondTiles() {
+    final total = 25 - _sliderValue.round(); //find number of bombs
+    final positions = List.generate(25, (i) => i)..shuffle();
+    _diamondTiles = positions.take(total).toSet();
   }
 }
