@@ -12,6 +12,8 @@ class DiamondGame extends StatefulWidget {
 
 class _DiamondGameState extends State<DiamondGame> {
   bool _gameEnabled = false;
+  bool _gameOver = false;
+
   double _sliderValue = 1.00;
   Set<int> _diamondTiles = {};
   final Set<int> _flippedTiles = {};
@@ -78,12 +80,18 @@ class _DiamondGameState extends State<DiamondGame> {
   }
 
   Widget _buildGameTile(BuildContext context, int index) {
-    final flipped = _flippedTiles.contains(index);
+    final flipped = _flippedTiles.contains(index) || _gameOver;
     final isDiamond = _diamondTiles.contains(index);
 
     return GestureDetector(
-      onTap: _gameEnabled && !flipped
-          ? () => setState(() => _flippedTiles.add(index))
+      onTap: (_gameEnabled && !flipped)
+          ? () {
+              setState(() => _flippedTiles.add(index));
+              if (!isDiamond) {
+                _gameEnabled = false;
+                _gameOver = true;
+              }
+            }
           : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -97,7 +105,7 @@ class _DiamondGameState extends State<DiamondGame> {
           child: flipped
               ? Icon(
                   isDiamond ? Icons.diamond : Icons.close,
-                  color: Colors.white,
+                  color: isDiamond ? Colors.blueAccent : Colors.white,
                 )
               : null,
         ),
@@ -205,19 +213,20 @@ class _DiamondGameState extends State<DiamondGame> {
             shadowColor: Colors.transparent,
           ),
           onPressed: () {
-            // print(_sliderValue.round());
             setState(() {
-              _gameEnabled = !_gameEnabled;
-
-              //If game started, generate random diamond tiles, else clear memory
               if (_gameEnabled) {
-                _generateDiamondTiles();
+                // End game early (manual cash out)
+                _gameEnabled = false;
+                _gameOver = true;
               } else {
-                _diamondTiles.clear();
+                // Start new game
+                _gameEnabled = true;
+                _gameOver = false;
                 _flippedTiles.clear();
+                _diamondTiles.clear();
+                _generateDiamondTiles();
               }
             });
-            print(_gameEnabled ? "Bet submitted!" : "Game Ended Early");
           },
           child: Text(
             _gameEnabled ? 'End Game' : 'PLACE BET',
