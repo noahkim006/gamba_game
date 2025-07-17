@@ -284,7 +284,7 @@ class _DiamondGameState extends State<DiamondGame> {
           ),
           onPressed: _toggleGameState,
           child: Text(
-            _gameEnabled ? 'End Game' : 'PLACE BET',
+            _gameEnabled ? 'CASH OUT' : 'PLACE BET',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -308,7 +308,7 @@ class _DiamondGameState extends State<DiamondGame> {
         return;
       }
       _turnNumber++;
-
+      // print(_turnNumber);
       _calculateCashoutMultiplier();
       // print("turnNumber: " + _turnNumber.toString());
       // print("num of diamonds: " + (25 - _sliderValue).toString());
@@ -326,6 +326,10 @@ class _DiamondGameState extends State<DiamondGame> {
   void _toggleGameState() {
     setState(() {
       if (_gameEnabled) {
+        // print(betMultiplier.value);
+        int winnings = calculateWinnings(betValue.value, betMultiplier.value);
+        addToBalance(winnings);
+        _loadBalance();
         _gameEnabled = false;
         _gameLost = true;
       } else {
@@ -362,7 +366,7 @@ class _DiamondGameState extends State<DiamondGame> {
     const double houseEdge = 0.96;
 
     int b = _sliderValue.round(); // number of mines
-    int x = _turnNumber - 1; // number of successful turns
+    int x = _turnNumber; // number of successful turns
     int total = 25;
     int safe = total - b;
 
