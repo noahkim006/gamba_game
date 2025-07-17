@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         // primaryColor: const Color(0xFF121212),
         appBarTheme: const AppBarTheme(
-          color: const Color(0xFF121212),
+          color: Color(0xFF121212),
         ),
         useMaterial3: true,
       ),
@@ -142,15 +142,15 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           //------------------------------------------------------------------------------------------------------------------------------------
-          // SizedBox(
-          //   child: IconButton(
-          //     icon: const Icon(Icons.grid_on_rounded),
-          //     onPressed: () async {
-          //       await decBalanceTest();
-          //       await _loadBalance();
-          //     },
-          //   ),
-          // ),
+          SizedBox(
+            child: IconButton(
+              icon: const Icon(Icons.money),
+              onPressed: () async {
+                await incBalanceTest();
+                await _loadBalance();
+              },
+            ),
+          ),
           //------------------------------------------------------------------------------------------------------------------------------------
         ],
       ),

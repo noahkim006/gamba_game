@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gamba_game/assets/globals.dart';
 import 'package:gamba_game/methods/balance_funcs.dart';
-import 'package:gamba_game/widgets/custom_appbar.dart';
+// import 'package:gamba_game/widgets/custom_appbar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DiamondGame extends StatefulWidget {
   const DiamondGame({super.key});
@@ -14,6 +15,7 @@ class _DiamondGameState extends State<DiamondGame> {
   bool _gameEnabled = false;
   bool _gameLost = false;
 
+  int _turnNumber = 1;
   double _sliderValue = 1.00;
   Set<int> _diamondTiles = {};
   final Set<int> _flippedTiles = {};
@@ -23,15 +25,67 @@ class _DiamondGameState extends State<DiamondGame> {
   static const Color _tileColor = Color(0xFF1E1E1E);
   static const Color _greenAccent = Colors.greenAccent;
   static const Color _redAccent = Colors.redAccent;
+  static const Color _blueAccent = Colors.lightBlueAccent;
   static const Color _buttonBlue = Color(0xFF2C3E50);
   static const Color _tileDiamondColor = Colors.green;
   static const Color _tileBombColor = Colors.red;
+
+  int _balance = 1000;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBalance();
+  }
+
+  Future<void> _loadBalance() async {
+    final prefs = await SharedPreferences.getInstance();
+    int? stored = prefs.getInt('user_balance');
+    if (stored == null) {
+      await prefs.setInt('user_balance', 1000);
+      stored = 1000;
+    }
+    setState(() {
+      _balance = stored!;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgColor,
-      appBar: const CustomAppBar(),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.credit_card_rounded,
+                    color: Color.fromRGBO(255, 215, 0, 100)),
+                const SizedBox(width: 4),
+                Text(
+                  '$_balance',
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.ondemand_video_rounded),
+                  onPressed: () {},
+                ),
+                const SizedBox(width: 2),
+                IconButton(
+                  icon: const Icon(Icons.menu_rounded),
+                  onPressed: () {},
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           const SizedBox(height: 5),
@@ -149,10 +203,9 @@ class _DiamondGameState extends State<DiamondGame> {
       child: Slider(
         value: _sliderValue,
         min: 1.0,
-        max: 24.0,
-        divisions: 23,
+        max: 20.0,
         activeColor: _redAccent,
-        inactiveColor: Colors.grey.shade700,
+        inactiveColor: _blueAccent,
         onChanged: _gameEnabled
             ? null
             : (double value) => setState(() => _sliderValue = value),
@@ -237,12 +290,14 @@ class _DiamondGameState extends State<DiamondGame> {
   // ----- Game Logic -----
 
   void _handleTileTap(int index, bool isDiamond) {
-    _calculateCashoutMultiplier();
     setState(() {
+      _turnNumber++;
       _flippedTiles.add(index);
       if (!isDiamond) {
         _gameEnabled = false;
         _gameLost = true;
+      } else {
+        _calculateCashoutMultiplier();
       }
     });
   }
@@ -259,11 +314,21 @@ class _DiamondGameState extends State<DiamondGame> {
   }
 
   void _startNewGame() {
+    //============CLEAN UP=========================
     _gameEnabled = true;
     _gameLost = false;
+    _turnNumber = 1;
     _flippedTiles.clear();
     _diamondTiles.clear();
     _generateDiamondTiles();
+    betMultiplier.value = 1.00;
+    //============================================
+
+    // bet(betValue.value);
+    setState(() {
+      bet(betValue.value);
+      _loadBalance();
+    });
   }
 
   void _generateDiamondTiles() {
@@ -273,6 +338,39 @@ class _DiamondGameState extends State<DiamondGame> {
   }
 
   void _calculateCashoutMultiplier() {
-    // Future logic for multiplier calculation
+    const double houseEdge = 0.96;
+
+    int b = _sliderValue.round(); // number of mines
+    int x = _turnNumber - 1; // number of successful turns
+    int total = 25;
+    int safe = total - b;
+
+    // edge cases to avoid invalid math
+    if (x <= 0 || b >= 25 || safe - x < 0) {
+      betMultiplier.value = 1.0;
+      return;
+    }
+
+    double numeratorLeft = factorial(safe);
+    double denominatorLeft = factorial(total);
+
+    double numeratorRight = factorial(total - x);
+    double denominatorRight = factorial(safe - x);
+
+    double probability =
+        (numeratorLeft / denominatorLeft) * (numeratorRight / denominatorRight);
+
+    // Defensive check for division by zero or extremely small probability
+    if (probability <= 0) {
+      betMultiplier.value = 1000.0; // or some max cap
+      return;
+    }
+
+    double multiplier = (1 / probability) * houseEdge;
+
+    // Optional: Round for cleaner UI
+    betMultiplier.value = double.parse(multiplier.toStringAsFixed(2));
+
+    print("Calculated cashout multiplier: ${betMultiplier.value}");
   }
 }
