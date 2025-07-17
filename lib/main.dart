@@ -20,7 +20,10 @@ class MyApp extends StatelessWidget {
       title: 'Gamba Game',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        // primaryColor: const Color(0xFF121212),
+        appBarTheme: const AppBarTheme(
+          color: const Color(0xFF121212),
+        ),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Gamba Game Home Page'),

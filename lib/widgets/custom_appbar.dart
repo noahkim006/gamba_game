@@ -19,37 +19,53 @@ class _CustomAppBar extends State<CustomAppBar> {
         onPressed: () async {
           Navigator.of(context).pop();
         },
-        icon: const Icon(Icons.grid_view_rounded),
+        icon: const Icon(
+          Icons.grid_view_rounded,
+          color: Colors.white,
+        ),
       ),
-      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      backgroundColor: const Color(0xFF121212),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.credit_card_rounded,
-                  color: Color.fromRGBO(255, 215, 0, 100)),
-              const SizedBox(width: 4),
-              FutureBuilder<int>(
-                future: getBalance(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      width: 30,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    );
-                  } else if (snapshot.hasError) {
-                    return const Text('Error');
-                  } else {
-                    return Text(
-                      '${snapshot.data}',
-                      style: const TextStyle(fontSize: 20),
-                    );
-                  }
-                },
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(5.0),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              color: Colors.blueGrey,
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.credit_card_rounded,
+                  color: Color.fromRGBO(255, 217, 0, 0.842),
+                  size: 20.0,
+                ),
+                const SizedBox(width: 4),
+                FutureBuilder<int>(
+                  future: getBalance(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        width: 30,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Text('Error');
+                    } else {
+                      return Text(
+                        '${snapshot.data}',
+                        style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
