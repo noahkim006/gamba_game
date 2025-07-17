@@ -46,6 +46,13 @@ Future<void> bet(int betAmount) async {
   }
 }
 
+Future<void> addToBalance(int amount) async {
+  final prefs = await SharedPreferences.getInstance();
+  int currentBalance = prefs.getInt('user_balance') ?? 1000;
+
+  await prefs.setInt('user_balance', currentBalance + amount);
+}
+
 Future<void> incBalanceTest() async {
   final prefs = await SharedPreferences.getInstance();
   int currentBalance = prefs.getInt('user_balance') ?? 1000;
@@ -71,4 +78,8 @@ void updateBalance() async {
   final prefs = await SharedPreferences.getInstance();
   final value = prefs.getInt('user_balance') ?? 0;
   currentBalance.value = value;
+}
+
+int calculateWinnings(int betAmount, double betMultiplier) {
+  return (betAmount * betMultiplier).round();
 }

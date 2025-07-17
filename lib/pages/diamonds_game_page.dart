@@ -15,7 +15,7 @@ class _DiamondGameState extends State<DiamondGame> {
   bool _gameEnabled = false;
   bool _gameLost = false;
 
-  int _turnNumber = 1;
+  int _turnNumber = 0;
   double _sliderValue = 1.00;
   Set<int> _diamondTiles = {};
   final Set<int> _flippedTiles = {};
@@ -55,7 +55,16 @@ class _DiamondGameState extends State<DiamondGame> {
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: IconButton(
+          onPressed: () async {
+            Navigator.of(context).pop();
+          },
+          icon: const Icon(
+            Icons.grid_view_rounded,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color(0xFF121212),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -66,19 +75,20 @@ class _DiamondGameState extends State<DiamondGame> {
                 const SizedBox(width: 4),
                 Text(
                   '$_balance',
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 20, color: Colors.white),
                 ),
               ],
             ),
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.ondemand_video_rounded),
+                  icon: const Icon(Icons.ondemand_video_rounded,
+                      color: Colors.white),
                   onPressed: () {},
                 ),
                 const SizedBox(width: 2),
                 IconButton(
-                  icon: const Icon(Icons.menu_rounded),
+                  icon: const Icon(Icons.menu_rounded, color: Colors.white),
                   onPressed: () {},
                 ),
               ],
@@ -291,13 +301,24 @@ class _DiamondGameState extends State<DiamondGame> {
 
   void _handleTileTap(int index, bool isDiamond) {
     setState(() {
-      _turnNumber++;
       _flippedTiles.add(index);
       if (!isDiamond) {
         _gameEnabled = false;
         _gameLost = true;
-      } else {
-        _calculateCashoutMultiplier();
+        return;
+      }
+      _turnNumber++;
+
+      _calculateCashoutMultiplier();
+      // print("turnNumber: " + _turnNumber.toString());
+      // print("num of diamonds: " + (25 - _sliderValue).toString());
+      if (_turnNumber == (25 - _sliderValue)) {
+        // print("winwinwinwinwiwnwinwinwiwniwn");
+        setState(() {
+          int winnings = calculateWinnings(betValue.value, betMultiplier.value);
+          addToBalance(winnings);
+          _loadBalance();
+        });
       }
     });
   }
@@ -317,7 +338,7 @@ class _DiamondGameState extends State<DiamondGame> {
     //============CLEAN UP=========================
     _gameEnabled = true;
     _gameLost = false;
-    _turnNumber = 1;
+    _turnNumber = 0;
     _flippedTiles.clear();
     _diamondTiles.clear();
     _generateDiamondTiles();
