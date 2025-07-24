@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gamba_game/pages/diamonds_game_page.dart';
+import 'package:gamba_game/pages/plinko_page.dart';
 import 'package:gamba_game/pages/rocket_game.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,7 +89,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 const SizedBox(width: 2),
                 IconButton(
                   icon: const Icon(Icons.menu_rounded),
-                  onPressed: () {},
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PlinkoGame(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
